@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.name}}
+  name: {{ .Values.name}}
+spec:
+  replicas: {{ .Values.replicas}}
+  selector:
+    matchLabels:
+      app: {{ .Values.name}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name}}
+    spec:
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ .Values.image}}
+        imagePullPolicy: ""
+        {{- if .Values.hasSecretVolume }}
+        volumeMounts:
+        - name: {{ .Values.name }}-volume-sec
+          mountPath: {{ .Values.secretVolumeMountPath }}
+        {{- end}}
+        {{- if or .Values.env.configMap .Values.env.secrets }}
+        envFrom:
+        {{- if .Values.env.configMap }}
+        - configMapRef:
+            name: {{ .Values.name }}-env-configmap
+        {{- end }}
+        {{- if .Values.env.secrets }}
+        - secretRef:
+            name: {{ .Values.name }}-env-secret
+        {{- end }}
+        {{- end }}
+        ports:
+        - containerPort: 5000
+      restartPolicy: Always
+      {{- if .Values.hasSecretVolume }}
+      volumes:
+      - name: {{ .Values.name }}-volume-sec
+        secret:
+          secretName: {{ .Values.name }}-volume-sec
+      {{- end}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.name}}
+  name: {{ .Values.name}}
+spec:
+  type: {{ .Values.servicetype}}
+  ports:
+  - name: "5000"
+    port: {{ .Values.port}}
+    targetPort: {{ .Values.port}}
+  selector:
+    app: {{ .Values.name}}
+  

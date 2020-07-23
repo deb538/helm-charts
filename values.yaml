@@ -1,0 +1,12 @@
+image: deb538/catalogue:0.0.2-SNAPSHOT
+port: 5000
+servicetype: LoadBalancer
+replicas: 1
+name: catalogue-service
+hasSecretVolume: true
+secretVolumeMountPath: /opt/appConfig
+namespace: dit
+
+env:
+  configMap:
+    JAVA_OPTS: -Dspring.config.location=/opt/appConfig/application-dit.properties -Dspring.profiles.active=dit
